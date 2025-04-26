@@ -1,6 +1,6 @@
 import streamlit as st
 import tempfile
-from supabase_client import supabase
+from supabase_client import supabase, get_current_user_id
 from whisper_utils import transcribe_audio, classify_transcription
 
 st.set_page_config(page_title="Pitch Uploader - GENUP2050", layout="centered")
@@ -25,7 +25,7 @@ if video_file is not None:
         disc_profile = classify_transcription(transcription)
         st.text_area("Profil DISC détecté :", disc_profile, height=100)
 
-        # Étape 3 : Upload de la vidéo
+        # Étape 3 : Upload vidéo
         bucket_name = "pitch-videos"
         supabase.storage.from_(bucket_name).upload(video_file.name, temp_file_path)
         video_url = supabase.storage.from_(bucket_name).get_public_url(video_file.name)
@@ -33,11 +33,13 @@ if video_file is not None:
         # Étape 4 : Sauvegarde Supabase
         user_name = st.text_input("Ton prénom / pseudo")
         if st.button("Enregistrer le pitch") and user_name:
+            user_id = get_current_user_id()  # Nécessite authentification avec Supabase
             data = {
                 "user_name": user_name,
                 "video_url": video_url,
                 "transcription": transcription,
-                "disc_profile": disc_profile  # Nouvelle colonne
+                "disc_profile": disc_profile,
+                "user_id": user_id  # pour activer la politique RLS
             }
             supabase.table("pitchs").insert(data).execute()
             st.success("Pitch sauvegardé avec succès !")
