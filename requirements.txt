@@ -4,3 +4,8 @@ supabase
 python-dotenv
 requests
 fpdf2
+whisper
+torch
+torchaudio
+tqdm
+ffmpeg-python
